@@ -16,9 +16,13 @@ router.post('/', async(req, res) => {
         useATTEND: true,
         useSCORE: true,
         useTIMETABLE: true,
+    })
+    res.send({
+        message: 'successed',
+        school_name: school.name,
+        school_id: school._id,
         timestamp: Date.now()
     })
-    res.send(school)
 })
 
 router.get('/', async(req, res) => {
