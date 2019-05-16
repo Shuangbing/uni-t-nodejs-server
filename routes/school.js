@@ -15,9 +15,14 @@ router.post('/', async(req, res) => {
         useWLAN: true,
         useATTEND: true,
         useSCORE: true,
-        useTIMETABLE: true
+        useTIMETABLE: true,
     })
-    res.send(school)
+    res.send({
+        message: 'successed',
+        school_name: school.name,
+        school_id: school._id,
+        timestamp: Date.now()
+    })
 })
 
 router.get('/', async(req, res) => {
