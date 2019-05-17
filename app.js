@@ -1,14 +1,23 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var createError = require('http-errors')
+var express = require('express')
+var path = require('path')
+var cookieParser = require('cookie-parser')
+var logger = require('morgan')
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/user');
+var indexRouter = require('./routes/index')
+var usersRouter = require('./routes/user')
 var schoolRouter = require('./routes/school')
+
+var database = require('./config/database')
+
 var fs = require('fs');
 var app = express();
+
+const mongoose = require("mongoose")
+mongoose.connect(database.mongo_path, {
+    useNewUrlParser: true,
+    useCreateIndex: true
+})
 
 global.privateKey = fs.readFileSync('./config/private.key', 'utf8');
 // view engine setup

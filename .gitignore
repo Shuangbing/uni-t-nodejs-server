@@ -1,3 +1,2 @@
-rest_test.http
-private.key
+*.http
 /node_modules
