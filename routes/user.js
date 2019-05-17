@@ -7,6 +7,24 @@ var config = require('../config/config')
 
 router.use(express.json())
 
+const userAuth = async(req, res, next) => {
+    const raw = String(req.headers.authorization).split(' ').pop()
+    const {uid} = config.verifyToken(raw)
+    if(!uid) {
+        return res.status(405).send({message: 'token invaild'})
+    }
+
+    req.user = await User.findById(uid)
+    .catch(function(e){
+        return res.status(405).send({message: 'user invaild'})
+    })
+    next()    
+}
+
+router.get('/', userAuth, async(req, res) => {
+    res.send(req.user)
+})
+
 router.post('/register', async(req, res) => {
 
   const school = await School.findById(req.body.school_id).findOne({
@@ -24,20 +42,30 @@ router.post('/register', async(req, res) => {
       password: req.body.password,
       school_id: req.body.school_id,
       lastlogin: config.timestamp
+  }).then(function(user) {
+    res.send({
+        message: 'create user successed',
+        usr: user.username,
+        verifyToken: config.generateToken(user._id),
+        school_id: user.school_id,
+        school_name: school.name
+    })
   })
-
-  res.send({
-      message: 'create user successed',
-      usr: user.username,
-      verifyToken: config.generateToken(user._id),
-      school_id: user.school_id,
-      school_name: school.name
-  })
+  .catch(function (e) {
+    const {code} = e
+    res.status(400).send({
+        message: code+'-Faild Register'
+        })
+    })
 })
 
 router.post('/login', async(req, res) => {
     const user = await User.findOne({
         username: req.body.username
+    }).catch(function(e){
+        res.status(400).send({
+            message: 'login faild',
+        })
     })
 
     if(!user) {
@@ -54,6 +82,10 @@ router.post('/login', async(req, res) => {
 
     const school = await School.findOne({
         _id: user.school_id
+    }).catch(function(e){
+        res.status(400).send({
+            message: 'login faild',
+        })
     })
 
     if(!school) {
