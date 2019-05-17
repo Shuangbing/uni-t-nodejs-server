@@ -22,7 +22,21 @@ const userAuth = async(req, res, next) => {
 }
 
 router.get('/', userAuth, async(req, res) => {
-    res.send(req.user)
+
+    const school = await School.findById(req.user.school_id).findOne({
+        support: true
+    })
+    .then(function(school){
+        return res.send({
+            username: req.user.username,
+            school_id: req.user.school_id,
+            school_name: school.name,
+            unicoin: req.user.unicoin
+        })
+    })
+    .catch(function(e){
+        return res.status(405).send({message: 'school invaild'})
+    })
 })
 
 router.post('/register', async(req, res) => {
@@ -44,7 +58,6 @@ router.post('/register', async(req, res) => {
       lastlogin: config.timestamp
   }).then(function(user) {
     res.send({
-        message: 'create user successed',
         usr: user.username,
         verifyToken: config.generateToken(user._id),
         school_id: user.school_id,
@@ -99,6 +112,7 @@ router.post('/login', async(req, res) => {
     })
 
     res.send({
+        uid: user._id,
         usr: user.username,
         verifyToken: config.generateToken(user._id),
         school_id: user.school_id,
