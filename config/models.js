@@ -6,6 +6,7 @@ const User = mongoose.model('User', new mongoose.Schema({
         return require('bcrypt').hashSync(val, 10)
     }},
     school_id: mongoose.Schema.Types.ObjectId,
+    unicoin: { type: Number, default: 0 },
     lastlogin: Number
 }))
 

@@ -16,12 +16,18 @@ router.post('/', async(req, res) => {
         useATTEND: true,
         useSCORE: true,
         useTIMETABLE: true,
-    })
-    res.send({
-        message: 'successed',
-        school_name: school.name,
-        school_id: school._id,
-        timestamp: Date.now()
+    }).then(function(school) {
+        res.send({
+            message: 'successed',
+            school_name: school.name,
+            school_id: school._id,
+            timestamp: Date.now()
+        })
+    }).catch(function (e) {
+        const {code} = e
+        res.status(400).send({
+            message: code+'-Faild add school'
+        })
     })
 })
 

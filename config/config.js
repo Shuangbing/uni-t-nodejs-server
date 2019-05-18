@@ -13,6 +13,16 @@ function generateToken(uid) {
     }, global.privateKey)
 }
 
+function verifyToken(raw) {
+    try {
+        return tokenGenerator.verify(raw, global.privateKey)
+    }catch(e){
+        return false
+    }
+}
+
+
 module.exports.generateToken = generateToken
+module.exports.verifyToken = verifyToken
 module.exports.cheackPassword = cheackPassword
 module.exports.timestamp = timestamp
