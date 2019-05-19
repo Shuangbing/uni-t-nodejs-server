@@ -12,12 +12,13 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 const School = mongoose.model('School', new mongoose.Schema({
     name: { type: String, unique: true },
+    apiPath: { type: String, unique: true },
     hidden: Boolean,
     support: Boolean,
-    useWLAN: Boolean,
-    useATTEND: Boolean,
-    useSCORE: Boolean,
-    useTIMETABLE: Boolean
+    useWlan: Boolean,
+    useAttend: Boolean,
+    useScore: Boolean,
+    useTimetable: Boolean
 }))
 
 
