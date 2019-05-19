@@ -3,14 +3,14 @@ const tokenGenerator = require('jsonwebtoken')
 
 var timestamp = Date.now()
 
-function cheackPassword(password_input, password_database) {
+function verifyPassword(password_input, password_database) {
     return vaildPassword.compareSync(password_input, password_database)
 }
 
 function generateToken(uid) {
     return tokenGenerator.sign({
         uid: String(uid),
-    }, global.privateKey)
+    }, global.privateKey, { expiresIn: '1h' })
 }
 
 function verifyToken(raw) {
@@ -24,5 +24,5 @@ function verifyToken(raw) {
 
 module.exports.generateToken = generateToken
 module.exports.verifyToken = verifyToken
-module.exports.cheackPassword = cheackPassword
+module.exports.verifyPassword = verifyPassword
 module.exports.timestamp = timestamp

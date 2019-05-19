@@ -3,19 +3,33 @@ const tokenGenerator = require('jsonwebtoken')
 
 var express = require('express')
 var router = express.Router()
-var config = require('../config/config')
+var UserMiddle = require('../middle/UserMiddle')
+var SchoolMiddle = require('../middle/SchoolMiddle')
 
 router.use(express.json())
+
+router.post('/api/verify', UserMiddle, SchoolMiddle, async(req, res) => {
+    var school_api = require('./school_api/'+String(req.school.apiPath))
+    school_api.verifySchoolAccount(req.body.susr,req.body.spsw)
+    .then((success)=>{
+        if(success){
+            res.send({message: 'verify success'})
+        }else{
+            res.status(400).send({message: 'verify faild'})
+        }
+    })
+})
 
 router.post('/', async(req, res) => {
     const school = await School.create({
         name: req.body.name,
+        apiPath: req.body.apiPath,
         hidden: false,
         support: true,
-        useWLAN: true,
-        useATTEND: true,
-        useSCORE: true,
-        useTIMETABLE: true,
+        useWlan: true,
+        useAttend: true,
+        useScore: true,
+        useTimetable: true
     }).then(function(school) {
         res.send({
             message: 'successed',

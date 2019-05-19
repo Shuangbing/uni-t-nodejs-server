@@ -4,25 +4,12 @@ const tokenGenerator = require('jsonwebtoken')
 var express = require('express')
 var router = express.Router()
 var config = require('../config/config')
+var UserMiddle = require('../middle/UserMiddle')
 
 router.use(express.json())
 
-const userAuth = async(req, res, next) => {
-    const raw = String(req.headers.authorization).split(' ').pop()
-    const {uid} = config.verifyToken(raw)
-    if(!uid) {
-        return res.status(405).send({message: 'token invaild'})
-    }
 
-    req.user = await User.findById(uid)
-    .catch(function(e){
-        return res.status(405).send({message: 'user invaild'})
-    })
-    next()    
-}
-
-router.get('/', userAuth, async(req, res) => {
-
+router.get('/', UserMiddle, async(req, res) => {
     const school = await School.findById(req.user.school_id).findOne({
         support: true
     })
@@ -36,6 +23,27 @@ router.get('/', userAuth, async(req, res) => {
     })
     .catch(function(e){
         return res.status(405).send({message: 'school invaild'})
+    })
+})
+
+router.post('/password/edit', UserMiddle, async(req, res) => {
+    if (!config.verifyPassword(req.body.password_old, req.user.password)) {
+        return res.status(422).send({
+            message: 'password not valid',
+        })
+    }
+    const user = await User.findByIdAndUpdate(req.user._id, {
+        password: req.body.password_new
+    })
+    .then(function(user) {
+        res.send({
+            message: 'password changed'
+        })
+    })
+    .catch(function(e) {
+        res.send({
+            message: 'password change faild'
+        })
     })
 })
 
@@ -87,7 +95,7 @@ router.post('/login', async(req, res) => {
         })
     }
 
-    if (!config.cheackPassword(req.body.password, user.password)) {
+    if (!config.verifyPassword(req.body.password, user.password)) {
         return res.status(422).send({
             message: 'password not valid',
         })
