@@ -10,7 +10,15 @@ function verifyPassword(password_input, password_database) {
 function generateToken(uid) {
     return tokenGenerator.sign({
         uid: String(uid),
-    }, global.privateKey, { expiresIn: '1h' })
+    }, global.privateKey, { expiresIn: '48h' })
+}
+
+function generateTokenWithSchoolAccount(uid, susr, spsw) {
+    return tokenGenerator.sign({
+        uid: String(uid),
+        susr: susr,
+        spsw: spsw
+    }, global.privateKey, { expiresIn: '48h' })
 }
 
 function verifyToken(raw) {
@@ -21,8 +29,8 @@ function verifyToken(raw) {
     }
 }
 
-
 module.exports.generateToken = generateToken
+module.exports.generateTokenWithSchoolAccount = generateTokenWithSchoolAccount
 module.exports.verifyToken = verifyToken
 module.exports.verifyPassword = verifyPassword
 module.exports.timestamp = timestamp

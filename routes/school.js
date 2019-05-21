@@ -1,27 +1,38 @@
 const {User, School} = require('../config/models')
-const tokenGenerator = require('jsonwebtoken')
-
-var express = require('express')
-var router = express.Router()
-var UserMiddle = require('../middle/UserMiddle')
-var SchoolMiddle = require('../middle/SchoolMiddle')
+const config = require('../config/config')
+const express = require('express')
+const router = express.Router()
+const UserMiddle = require('../middle/UserMiddle')
+const SchoolMiddle = require('../middle/SchoolMiddle')
+const response = require('../config/response')
 
 router.use(express.json())
 
 router.post('/api/verify', UserMiddle, SchoolMiddle, async(req, res) => {
-    var school_api = require('./school_api/'+String(req.school.apiPath))
+    const school_api = require('./school_api/'+String(req.school.apiPath))
     school_api.verifySchoolAccount(req.body.susr,req.body.spsw)
     .then((success)=>{
         if(success){
-            res.send({message: 'verify success'})
+            response.sendSuccess(res, {
+                school_account: config.generateTokenWithSchoolAccount(req.user._id, req.body.susr, req.body.spsw)
+        }, 'verify success')
         }else{
-            res.status(400).send({message: 'verify faild'})
+            response.sendError(res, 'verify faild')
         }
     })
 })
 
+router.post('/api/timetable', UserMiddle, SchoolMiddle, async(req, res) => {
+    const school_api = require('./school_api/'+String(req.school.apiPath))
+    school_api.syncTimeTable('g1772025', 'kSh0421!?!')
+    .then((data)=>{
+        if(!data){ return response.sendError(res, 'sync timetable faild') }
+        response.sendSuccess( res, data, 'sync timetable success')
+    })
+})
+
 router.post('/', async(req, res) => {
-    const school = await School.create({
+    await School.create({
         name: req.body.name,
         apiPath: req.body.apiPath,
         hidden: false,
@@ -31,17 +42,13 @@ router.post('/', async(req, res) => {
         useScore: true,
         useTimetable: true
     }).then(function(school) {
-        res.send({
-            message: 'successed',
+        response.sendSuccess(res, {
             school_name: school.name,
             school_id: school._id,
             timestamp: Date.now()
-        })
+        }, 'success')
     }).catch(function (e) {
-        const {code} = e
-        res.status(400).send({
-            message: code+'-Faild add school'
-        })
+        response.sendError(res, 'add school faild')
     })
 })
 
@@ -50,7 +57,7 @@ router.get('/', async(req, res) => {
         hidden: false,
         support: true
     })
-    res.send(school)
+    response.sendSuccess(res, school, 'success school list')
 })
 
 module.exports = router
