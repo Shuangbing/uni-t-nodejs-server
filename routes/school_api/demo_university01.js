@@ -1,6 +1,7 @@
 const axios = require('axios')
 const cheerio = require('cheerio')
 const qs = require('qs')
+const iconv = require('iconv-lite')
 
 async function verifySchoolAccount(sc_user, sc_password) {
     return axios.post('https://webclass.tcu.ac.jp/webclass/login.php', qs.stringify({
@@ -22,6 +23,57 @@ async function verifySchoolAccount(sc_user, sc_password) {
     })
 }
 
+async function attendanceList(sc_user, sc_password) {
+    const jconv = require('jconv');
+    const data = qs.stringify({
+        uid: sc_user,
+        pass: sc_password,
+        module: 'Default',
+        action: 'Login'
+    })
+    return axios.post('https://call.off.tcu.ac.jp/index.php'+'?menuname=%8Fo%90%C8&', data, { responseType: 'arraybuffer' })
+    .then((res) => {
+        const html = jconv.decode(res.data, "SJIS");
+        //if(!html.includes(sc_user)) { return false }
+        var attendanceArray = [];
+        const $ = cheerio.load(html)
+        $('select[name=SelKamoku]').find('option[value!=x]').each(function(j, item) {
+            attendanceArray.push({
+                attendanceTitle: $(item).text(),
+                attendanceCode: $(item).val()
+            })
+        })
+        if ( attendanceArray.length == 0 ) { return false }
+        return attendanceArray
+    })
+}
+
+async function attendancePost(sc_user, sc_password, attendCode, attendNo) {
+    const jconv = require('jconv');
+    const data_Login = qs.stringify({
+        uid: sc_user,
+        pass: sc_password,
+        module: 'Default',
+        action: 'Login'
+    })
+    const data_SendAttend = qs.stringify({
+        module: 'Sk',
+        action: ProcedureAcc,
+        SelKamoku: attendCode,
+        InpNo: attendNo
+    })
+    return axios.post('https://call.off.tcu.ac.jp/index.php'+'?menuname=%8Fo%90%C8&', data_Login, { responseType: 'arraybuffer' })
+    .then(() => {
+        //if(!html.includes(sc_user)) { return false }
+        return axios.post('https://call.off.tcu.ac.jp/index.php'+'?submitButtonName=%8Fo%90%C8%93o%98%5E&', data_SendAttend, { responseType: 'arraybuffer' })
+        .then((res) => {
+            const html = jconv.decode(res.data, "SJIS");
+            if(!html.includes('出席を受け付けました')) { return false }
+            return true
+        })
+    })
+}
+
 async function syncTimeTable(sc_user, sc_password) {
     var week = 0, time = 0
     return axios.post('https://webclass.tcu.ac.jp/webclass/login.php', qs.stringify({
@@ -39,7 +91,6 @@ async function syncTimeTable(sc_user, sc_password) {
             const html = res.data
             const $ = cheerio.load(html)
             var timetable = [];
-            console.log(res.data)
             $('tr[data-class_order]').each(function(j, item) {
                 time++;
                 $(item).find('div a').each(function(i, item) {
@@ -62,5 +113,6 @@ async function syncTimeTable(sc_user, sc_password) {
     })
 }
 
+module.exports.attendanceList = attendanceList
 module.exports.verifySchoolAccount = verifySchoolAccount
 module.exports.syncTimeTable = syncTimeTable
