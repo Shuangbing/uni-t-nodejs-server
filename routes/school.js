@@ -23,11 +23,32 @@ router.post('/api/verify', UserMiddle, SchoolMiddle, async(req, res) => {
 })
 
 router.post('/api/timetable', UserMiddle, SchoolMiddle, async(req, res) => {
+    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
     const school_api = require('./school_api/'+String(req.school.apiPath))
-    school_api.syncTimeTable('g1772025', 'kSh0421!?!')
+    school_api.syncTimeTable(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
         if(!data){ return response.sendError(res, 'sync timetable faild') }
         response.sendSuccess( res, data, 'sync timetable success')
+    })
+})
+
+router.get('/api/attendance', UserMiddle, SchoolMiddle, async(req, res) => {
+    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
+    const school_api = require('./school_api/'+String(req.school.apiPath))
+    school_api.attendanceList(req.school_account.susr, req.school_account.spsw)
+    .then((data)=>{
+        if(!data){ return response.sendError(res, 'get attendance list faild') }
+        response.sendSuccess( res, data, 'get attendance list success')
+    })
+})
+
+router.post('/api/attendance', UserMiddle, SchoolMiddle, async(req, res) => {
+    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
+    const school_api = require('./school_api/'+String(req.school.apiPath))
+    school_api.attendanceList(req.school_account.susr, req.school_account.spsw)
+    .then((data)=>{
+        if(!data){ return response.sendError(res, 'get attendance list faild') }
+        response.sendSuccess( res, data, 'get attendance list success')
     })
 })
 
