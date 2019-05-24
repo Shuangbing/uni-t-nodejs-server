@@ -58,18 +58,26 @@ async function attendancePost(sc_user, sc_password, attendCode, attendNo) {
     })
     const data_SendAttend = qs.stringify({
         module: 'Sk',
-        action: ProcedureAcc,
+        action: 'ProcedureAcc',
         SelKamoku: attendCode,
         InpNo: attendNo
     })
     return axios.post('https://call.off.tcu.ac.jp/index.php'+'?menuname=%8Fo%90%C8&', data_Login, { responseType: 'arraybuffer' })
-    .then(() => {
+    .then((res) => {
         //if(!html.includes(sc_user)) { return false }
-        return axios.post('https://call.off.tcu.ac.jp/index.php'+'?submitButtonName=%8Fo%90%C8%93o%98%5E&', data_SendAttend, { responseType: 'arraybuffer' })
+        return axios.post('https://call.off.tcu.ac.jp/index.php'+'?submitButtonName=%8Fo%90%C8%93o%98%5E&',
+        data_SendAttend,
+        {
+            responseType: 'arraybuffer',
+            headers: {
+                Cookie: res.headers['set-cookie']
+            }
+        })
         .then((res) => {
             const html = jconv.decode(res.data, "SJIS");
-            if(!html.includes('出席を受け付けました')) { return false }
-            return true
+            if(html.includes('出席を受け付けました')) { return 1 }
+            if(html.includes('既に出席登録が行われています')) { return 2 }
+            return false
         })
     })
 }
@@ -93,16 +101,18 @@ async function syncTimeTable(sc_user, sc_password) {
             var timetable = [];
             $('tr[data-class_order]').each(function(j, item) {
                 time++;
-                $(item).find('div a').each(function(i, item) {
+                $(item).find('td[class!=schedule-table-class_order]').each(function(i, item) {
                     week = i;
                     $name = $(item).text().split("» ").pop().split(" (").shift()
                     $teacher = $(item).text().split("、")[1]
-                    timetable.push({
-                        week: week,
-                        time: time,
-                        lesson_name: $name,
-                        lesson_teacher: $teacher
-                    })
+                    if($name.length > 0) {
+                        timetable.push({
+                            week: week,
+                            time: time,
+                            lesson_name: $name,
+                            lesson_teacher: $teacher
+                        })
+                    }
                 })
             })
             return timetable
@@ -113,6 +123,32 @@ async function syncTimeTable(sc_user, sc_password) {
     })
 }
 
+async function gradeQuery(sc_user, sc_password) {
+    const jconv = require('jconv');
+    const data = qs.stringify({
+        userID: sc_user,
+        password: sc_password,
+        buttonName: 'login',
+        lang: '1'
+    })
+    return axios.post('https://websrv.tcu.ac.jp/tcu_web_v3/login.do', data)
+    .then((res) => {
+        return axios.get('https://websrv.tcu.ac.jp/tcu_web_v3/wssrlstr.do?clearAccessData=false&contenam=wssrlstr&kjnmnNo=6', {
+            headers: {
+                Cookie: res.headers['set-cookie']
+            }
+        }).then((res) => {
+            console.log(res.data)
+            const html = res.data
+            const $ = cheerio.load(html)
+            var gradeList = [];
+            return gradeList
+        })
+    })
+}
+
 module.exports.attendanceList = attendanceList
+module.exports.attendancePost = attendancePost
 module.exports.verifySchoolAccount = verifySchoolAccount
 module.exports.syncTimeTable = syncTimeTable
+module.exports.gradeQuery = gradeQuery
