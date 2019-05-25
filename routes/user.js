@@ -19,26 +19,25 @@ router.get('/', UserMiddle, async(req, res) => {
             school_id: req.user.school_id,
             school_name: school.name,
             unicoin: req.user.unicoin
-        }, 'get profile success')
+        }, 'プロフィール確認できました')
     })
     .catch(function(e){
-        return response.sendError(res, 'school invaild')
-        return res.status(405).send({message: 'school invaild'})
+        return response.sendError(res, '対応学校ではありません')
     })
 })
 
 router.post('/password/edit', UserMiddle, async(req, res) => {
     if (!config.verifyPassword(req.body.password_old, req.user.password)) {
-        return response.sendError(res, 'password not valid')
+        return response.sendError(res, 'パスワードが正しくありません')
     }
     const user = await User.findByIdAndUpdate(req.user._id, {
         password: req.body.password_new
     })
     .then(function(user) {
-        return response.sendSuccess(res, {}, 'password has changed')
+        return response.sendSuccess(res, {}, 'パスワード変更できました')
     })
     .catch(function(e) {
-        return response.sendError(res, 'password has change')
+        return response.sendError(res, 'パスワード変更できませんでした')
     })
 })
 
@@ -49,7 +48,7 @@ router.post('/register', async(req, res) => {
   })
 
   if(!school) {
-    return response.sendError(res, 'school not found')
+    return response.sendError(res, '対応学校ではありません')
   }
 
   const user = await User.create({
@@ -57,17 +56,19 @@ router.post('/register', async(req, res) => {
       password: req.body.password,
       school_id: req.body.school_id,
       lastlogin: config.timestamp
-  }).then(function(user) {
+  })
+  .then(function(user) {
     return response.sendSuccess(res, {
+        uid: user._id,
         usr: user.username,
         access_token: config.generateToken(user._id),
         school_id: user.school_id,
         school_name: school.name
-    }, 'finish register')
+    }, '新規登録が完了しました')
   })
   .catch(function (e) {
     const {code} = e
-    return response.sendError(res, 'register faild')
+    return response.sendError(res, '新規登録できませんでした')
     })
 })
 
@@ -75,25 +76,25 @@ router.post('/login', async(req, res) => {
     const user = await User.findOne({
         username: req.body.username
     }).catch(function(e){
-        return response.sendError(res, 'login faild')
+        return response.sendError(res, 'ログインできませんでした')
     })
 
     if(!user) {
-        return response.sendError(res, 'user not found')
+        return response.sendError(res, '入力したユーザがありません')
     }
 
     if (!config.verifyPassword(req.body.password, user.password)) {
-        return response.sendError(res, 'password not vaild')
+        return response.sendError(res, 'パスワードが正しくありません')
     }
 
     const school = await School.findOne({
         _id: user.school_id
     }).catch(function(e){
-        return response.sendError(res, 'login faild')
+        return response.sendError(res, 'ログインできませんでした')
     })
 
     if(!school) {
-        return response.sendError(res, 'school not found')
+        return response.sendError(res, '対応学校ではありません')
     }
     
     user.updateOne({
@@ -107,7 +108,7 @@ router.post('/login', async(req, res) => {
         school_id: user.school_id,
         school_name: school.name,
         timestamp: config.timestamp
-    }, 'login success')
+    }, 'ログイン完了しました')
 })
 
 module.exports = router

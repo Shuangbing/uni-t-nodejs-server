@@ -1,7 +1,7 @@
 const axios = require('axios')
 const cheerio = require('cheerio')
 const qs = require('qs')
-const iconv = require('iconv-lite')
+const curl = new (require( 'curl-request' ))();
 
 async function verifySchoolAccount(sc_user, sc_password) {
     return axios.post('https://webclass.tcu.ac.jp/webclass/login.php', qs.stringify({
@@ -34,7 +34,6 @@ async function attendanceList(sc_user, sc_password) {
     return axios.post('https://call.off.tcu.ac.jp/index.php'+'?menuname=%8Fo%90%C8&', data, { responseType: 'arraybuffer' })
     .then((res) => {
         const html = jconv.decode(res.data, "SJIS");
-        //if(!html.includes(sc_user)) { return false }
         var attendanceArray = [];
         const $ = cheerio.load(html)
         $('select[name=SelKamoku]').find('option[value!=x]').each(function(j, item) {
@@ -84,6 +83,7 @@ async function attendancePost(sc_user, sc_password, attendCode, attendNo) {
 
 async function syncTimeTable(sc_user, sc_password) {
     var week = 0, time = 0
+    
     return axios.post('https://webclass.tcu.ac.jp/webclass/login.php', qs.stringify({
         username: sc_user,
         val: sc_password,
@@ -125,25 +125,48 @@ async function syncTimeTable(sc_user, sc_password) {
 
 async function gradeQuery(sc_user, sc_password) {
     const jconv = require('jconv');
-    const data = qs.stringify({
-        userID: sc_user,
-        password: sc_password,
-        buttonName: 'login',
-        lang: '1'
+    return curl
+    .setBody({
+        'buttonName': 'login',
+        'lang': '1',
+        'userId': sc_user,
+        'password': sc_password
     })
-    return axios.post('https://websrv.tcu.ac.jp/tcu_web_v3/login.do', data)
-    .then((res) => {
-        return axios.get('https://websrv.tcu.ac.jp/tcu_web_v3/wssrlstr.do?clearAccessData=false&contenam=wssrlstr&kjnmnNo=6', {
-            headers: {
-                Cookie: res.headers['set-cookie']
-            }
-        }).then((res) => {
-            console.log(res.data)
-            const html = res.data
-            const $ = cheerio.load(html)
-            var gradeList = [];
-            return gradeList
-        })
+    .post('https://www.uni-t.cc/aa.txt')
+    .then(({code, body, headers}) => {
+        if(!body == '' && !headers['set-cookie']){
+            return curl.setHeaders(['cookie: ' + 'setcookies'.toString()])
+            .get('https://www.uni-t.cc/demo/score.html')
+            .then(({code, body, headers}) => {
+                const html = body.replace(/\s\s+|&nbsp;/g,'')
+                const $ = cheerio.load(html)
+                var gradeList = [];
+                $('table tr[class=column_odd]').each(function(j, item) {
+                    var gradeData = {class: '', credit: 0, score: ''}
+                    $(item).children('td').each(function(i, item) {
+                        switch(i){
+                            case 0:
+                                gradeData.class = $(item).text()
+                                break
+                            case 1:
+                                gradeData.credit = Number($(item).text())
+                                break
+                            case 2:
+                                gradeData.score = $(item).text()
+                                break
+                        }
+                    })
+                    gradeList.push(gradeData)
+                })
+                return gradeList
+            })
+        }
+        else{
+            return false
+        }
+    })
+    .catch(() => {
+        return false
     })
 }
 

@@ -15,57 +15,57 @@ router.post('/api/verify', UserMiddle, SchoolMiddle, async(req, res) => {
         if(success){
             response.sendSuccess(res, {
                 school_account: config.generateTokenWithSchoolAccount(req.user._id, req.body.susr, req.body.spsw)
-        }, 'verify success')
+        }, '認証完了しました')
         }else{
-            response.sendError(res, 'verify faild')
+            response.sendError(res, '認証できませんでした')
         }
     })
 })
 
 router.get('/api/timetable', UserMiddle, SchoolMiddle, async(req, res) => {
-    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
+    if (!req.school_account) { return response.sendError(res, '学内アカウントを再認証してください') }
     const school_api = require('./school_api/'+String(req.school.apiPath))
     school_api.syncTimeTable(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
-        if(!data){ return response.sendError(res, 'sync timetable faild') }
-        response.sendSuccess( res, data, 'sync timetable success')
+        if(!data){ return response.sendError(res, '時間割同期できませんでした') }
+        response.sendSuccess( res, data, '時間割同期完了しました')
     })
 })
 
 router.get('/api/attendance', UserMiddle, SchoolMiddle, async(req, res) => {
-    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
+    if (!req.school_account) { return response.sendError(res, '学内アカウントを再認証してください') }
     const school_api = require('./school_api/'+String(req.school.apiPath))
     school_api.attendanceList(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
-        if(!data){ return response.sendError(res, 'get attendance list faild') }
-        response.sendSuccess( res, data, 'get attendance list success')
+        if(!data){ return response.sendError(res, '出席情報ありません') }
+        response.sendSuccess( res, data, '出席情報の更新が完了しました')
     })
 })
 
 router.post('/api/attendance', UserMiddle, SchoolMiddle, async(req, res) => {
-    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
+    if (!req.school_account) { return response.sendError(res, '学内アカウントを再認証してください') }
     const school_api = require('./school_api/'+String(req.school.apiPath))
     school_api.attendancePost(req.school_account.susr, req.school_account.spsw, req.body.attendanceCode, req.body.attendanceNo)
     .then((data)=>{
-        if(!data){ return response.sendError(res, 'attendance faild') }
+        if(!data){ return response.sendError(res, '出席送信できませんでした') }
         switch(data){
             case 1:
-                response.sendSuccess( res, data, 'attendance success' )
+                response.sendSuccess( res, data, '出席送信が完了しました' )
                 break
             case 2:
-                response.sendError( res, 'already attendance' )
+                response.sendError( res, '出席済みです' )
                 break
         }
     })
 })
 
 router.get('/api/grade', UserMiddle, SchoolMiddle, async(req, res) => {
-    if (!req.school_account) { return response.sendError(res, 'school account time limit') }
+    if (!req.school_account) { return response.sendError(res, '学内アカウントを再認証してください') }
     const school_api = require('./school_api/'+String(req.school.apiPath))
     school_api.gradeQuery(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
-        if(!data){ return response.sendError(res, 'grade query faild') }
-        response.sendSuccess( res, data, 'grade query success' )
+        if(!data){ return response.sendError(res, '成績情報確認できませんでした') }
+        response.sendSuccess( res, data, '成績情報確認できました' )
     })
 })
 
@@ -86,7 +86,7 @@ router.post('/', async(req, res) => {
             timestamp: Date.now()
         }, 'success')
     }).catch(function (e) {
-        response.sendError(res, 'add school faild')
+        response.sendError(res, '学校の追加が失敗しました')
     })
 })
 
@@ -94,8 +94,24 @@ router.get('/', async(req, res) => {
     const school = await School.find({
         hidden: false,
         support: true
+    }).exec(function(err, schools){
+        var school_data = [];
+        schools.map(function(school){
+            console.log(school._id)
+            school_data.push({
+                school_id: school._id,
+                school_name: school.name,
+                school_support: {
+                    wlan: school.useWlan,
+                    attend: school.useAttend,
+                    score: school.useScore,
+                    timetable: school.useTimetable
+                }
+            })
+        })
+        response.sendSuccess(res, school_data, '学校情報確認できました')
     })
-    response.sendSuccess(res, school, 'success school list')
+    
 })
 
 module.exports = router
