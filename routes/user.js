@@ -10,7 +10,7 @@ router.use(express.json())
 
 
 router.get('/', UserMiddle, async(req, res) => {
-    const school = await School.findById(req.user.school_id).findOne({
+    await School.findById(req.user.school_id).findOne({
         support: true
     })
     .then(function(school){
@@ -26,7 +26,7 @@ router.get('/', UserMiddle, async(req, res) => {
     })
 })
 
-router.post('/password/edit', UserMiddle, async(req, res) => {
+router.put('/auth/password', UserMiddle, async(req, res) => {
     if (!config.verifyPassword(req.body.password_old, req.user.password)) {
         return response.sendError(res, 'パスワードが正しくありません')
     }
@@ -41,7 +41,7 @@ router.post('/password/edit', UserMiddle, async(req, res) => {
     })
 })
 
-router.post('/register', async(req, res) => {
+router.post('/auth/register', async(req, res) => {
 
   const school = await School.findById(req.body.school_id).findOne({
       support: true
@@ -61,7 +61,6 @@ router.post('/register', async(req, res) => {
     return response.sendSuccess(res, {
         uid: user._id,
         usr: user.username,
-        access_token: config.generateToken(user._id),
         school_id: user.school_id,
         school_name: school.name
     }, '新規登録が完了しました')
@@ -72,9 +71,10 @@ router.post('/register', async(req, res) => {
     })
 })
 
-router.post('/login', async(req, res) => {
+router.post('/auth/login', async(req, res) => {
+    const {username, password, uuid} = req.body
     const user = await User.findOne({
-        username: req.body.username
+        username: username
     }).catch(function(e){
         return response.sendError(res, 'ログインできませんでした')
     })
@@ -83,32 +83,53 @@ router.post('/login', async(req, res) => {
         return response.sendError(res, '入力したユーザがありません')
     }
 
-    if (!config.verifyPassword(req.body.password, user.password)) {
+    if (!config.verifyPassword(password, user.password)) {
         return response.sendError(res, 'パスワードが正しくありません')
     }
 
-    const school = await School.findOne({
-        _id: user.school_id
-    }).catch(function(e){
-        return response.sendError(res, 'ログインできませんでした')
-    })
-
-    if(!school) {
+    const school = await School.findById(user.school_id)
+    .catch(function(){
         return response.sendError(res, '対応学校ではありません')
-    }
-    
-    user.updateOne({
-        lastlogin: config.timestamp
     })
+    
+    user.access_token = config.generateToken(user._id, uuid)
+    user.lastlogin = config.timestamp
+    user.save()
 
     response.sendSuccess(res, {
         uid: user._id,
         usr: user.username,
-        access_token: config.generateToken(user._id),
+        access_token: user.access_token,
         school_id: user.school_id,
         school_name: school.name,
-        timestamp: config.timestamp
+        timestamp: user.lastlogin
     }, 'ログイン完了しました')
+})
+
+
+router.get('/auth/logout', UserMiddle, async(req, res) => {
+    req.user.access_token = ''
+    await req.user.save()
+    .then(() => {
+        response.sendSuccess(res, { timestamp: config.timestamp }, 'ログアウト完了')
+    })
+    .catch(() => {
+        response.sendError(res, 'ログアウトできませんでした')
+    })
+})
+
+router.get('/auth/refresh', UserMiddle, async(req, res) => {
+    const new_AccessToken = config.generateToken(req.user._id, req.uuid)
+    req.user.access_token = new_AccessToken
+    await req.user.save()
+    .then(() => {
+        response.sendSuccess(res, {
+            access_token: new_AccessToken
+        }, 'トークンの更新が完了しました')
+    })
+    .catch(() => {
+        res.status(403).send({message: 'トークンの更新ができませんでした'})
+    })
 })
 
 module.exports = router

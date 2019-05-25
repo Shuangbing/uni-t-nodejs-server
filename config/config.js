@@ -2,15 +2,31 @@ const vaildPassword = require('bcrypt')
 const crypto = require('crypto')
 const tokenGenerator = require('jsonwebtoken')
 const timestamp = Date.now()
+const accessTokenExpired = '7d'
+const refreshTokenExpired = '7d'
 
 function verifyPassword(password_input, password_database) {
     return vaildPassword.compareSync(password_input, password_database)
 }
 
-function generateToken(uid) {
+function generateToken(uid, uuid) {
     return tokenGenerator.sign({
         uid: String(uid),
-    }, global.privateKey, { expiresIn: '48h' })
+        client_uuid: uuid
+    }, global.privateKey, { expiresIn: accessTokenExpired })
+}
+
+function generateTokenByRefreshToken(refrsh_token, uuid_body) {
+    if({uid, uuid} = verifyToken(refrsh_token)) {
+        console.log(uid, uuid)
+    }
+}
+
+function generateRefreshToken(uid, uuid) {
+    return tokenGenerator.sign({
+        uid: String(uid),
+        uuid: String(uuid)
+    }, global.privateKey, { expiresIn: refreshTokenExpired })
 }
 
 function generateTokenWithSchoolAccount(uid, susr, spsw) {
@@ -45,6 +61,7 @@ function decryptSchoolAccount(encrypted){
     }
 }
 
+module.exports.generateRefreshToken = generateRefreshToken
 module.exports.decryptSchoolAccount = decryptSchoolAccount
 module.exports.generateToken = generateToken
 module.exports.generateTokenWithSchoolAccount = generateTokenWithSchoolAccount
