@@ -3,22 +3,20 @@ const config = require('../config/config')
 
 module.exports = async(req, res, next) => {
     const raw_school = String(req.headers.authentication).split(' ').pop()
-    const { uid, susr, spsw } = config.verifyToken(raw_school)
+    const { uid, auth } = config.verifyToken(raw_school)
     await School.findById(req.user.school_id)
     .then((school) => {
-
         if(uid && req.user._id == uid) {
-            console.log(uid, susr, spsw)
+            const { susr, spsw } = config.decryptSchoolAccount(String(auth))
             req.school_account = {
                 susr: susr,
                 spsw: spsw
             }
         }
-        
         req.school = school
         next()
     })
     .catch(function(e){
-        return res.status(405).send({message: 'school invaild'})
+        return res.status(405).send({message: '認証データは無効です'})
     })
 }

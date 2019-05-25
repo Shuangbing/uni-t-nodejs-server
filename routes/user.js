@@ -10,7 +10,7 @@ router.use(express.json())
 
 
 router.get('/', UserMiddle, async(req, res) => {
-    const school = await School.findById(req.user.school_id).findOne({
+    await School.findById(req.user.school_id).findOne({
         support: true
     })
     .then(function(school){
@@ -19,37 +19,36 @@ router.get('/', UserMiddle, async(req, res) => {
             school_id: req.user.school_id,
             school_name: school.name,
             unicoin: req.user.unicoin
-        }, 'get profile success')
+        }, 'プロフィール確認できました')
     })
     .catch(function(e){
-        return response.sendError(res, 'school invaild')
-        return res.status(405).send({message: 'school invaild'})
+        return response.sendError(res, '対応学校ではありません')
     })
 })
 
-router.post('/password/edit', UserMiddle, async(req, res) => {
+router.put('/auth/password', UserMiddle, async(req, res) => {
     if (!config.verifyPassword(req.body.password_old, req.user.password)) {
-        return response.sendError(res, 'password not valid')
+        return response.sendError(res, 'パスワードが正しくありません')
     }
     const user = await User.findByIdAndUpdate(req.user._id, {
         password: req.body.password_new
     })
     .then(function(user) {
-        return response.sendSuccess(res, {}, 'password has changed')
+        return response.sendSuccess(res, {}, 'パスワード変更できました')
     })
     .catch(function(e) {
-        return response.sendError(res, 'password has change')
+        return response.sendError(res, 'パスワード変更できませんでした')
     })
 })
 
-router.post('/register', async(req, res) => {
+router.post('/auth/register', async(req, res) => {
 
   const school = await School.findById(req.body.school_id).findOne({
       support: true
   })
 
   if(!school) {
-    return response.sendError(res, 'school not found')
+    return response.sendError(res, '対応学校ではありません')
   }
 
   const user = await User.create({
@@ -57,57 +56,80 @@ router.post('/register', async(req, res) => {
       password: req.body.password,
       school_id: req.body.school_id,
       lastlogin: config.timestamp
-  }).then(function(user) {
+  })
+  .then(function(user) {
     return response.sendSuccess(res, {
+        uid: user._id,
         usr: user.username,
-        access_token: config.generateToken(user._id),
         school_id: user.school_id,
         school_name: school.name
-    }, 'finish register')
+    }, '新規登録が完了しました')
   })
   .catch(function (e) {
     const {code} = e
-    return response.sendError(res, 'register faild')
+    return response.sendError(res, '新規登録できませんでした')
     })
 })
 
-router.post('/login', async(req, res) => {
+router.post('/auth/login', async(req, res) => {
+    const {username, password, uuid} = req.body
     const user = await User.findOne({
-        username: req.body.username
+        username: username
     }).catch(function(e){
-        return response.sendError(res, 'login faild')
+        return response.sendError(res, 'ログインできませんでした')
     })
 
     if(!user) {
-        return response.sendError(res, 'user not found')
+        return response.sendError(res, '入力したユーザがありません')
     }
 
-    if (!config.verifyPassword(req.body.password, user.password)) {
-        return response.sendError(res, 'password not vaild')
+    if (!config.verifyPassword(password, user.password)) {
+        return response.sendError(res, 'パスワードが正しくありません')
     }
 
-    const school = await School.findOne({
-        _id: user.school_id
-    }).catch(function(e){
-        return response.sendError(res, 'login faild')
+    const school = await School.findById(user.school_id)
+    .catch(function(){
+        return response.sendError(res, '対応学校ではありません')
     })
-
-    if(!school) {
-        return response.sendError(res, 'school not found')
-    }
     
-    user.updateOne({
-        lastlogin: config.timestamp
-    })
+    user.access_token = config.generateToken(user._id, uuid)
+    user.lastlogin = config.timestamp
+    user.save()
 
     response.sendSuccess(res, {
         uid: user._id,
         usr: user.username,
-        access_token: config.generateToken(user._id),
+        access_token: user.access_token,
         school_id: user.school_id,
         school_name: school.name,
-        timestamp: config.timestamp
-    }, 'login success')
+        timestamp: user.lastlogin
+    }, 'ログイン完了しました')
+})
+
+
+router.get('/auth/logout', UserMiddle, async(req, res) => {
+    req.user.access_token = ''
+    await req.user.save()
+    .then(() => {
+        response.sendSuccess(res, { timestamp: config.timestamp }, 'ログアウト完了')
+    })
+    .catch(() => {
+        response.sendError(res, 'ログアウトできませんでした')
+    })
+})
+
+router.get('/auth/refresh', UserMiddle, async(req, res) => {
+    const new_AccessToken = config.generateToken(req.user._id, req.uuid)
+    req.user.access_token = new_AccessToken
+    await req.user.save()
+    .then(() => {
+        response.sendSuccess(res, {
+            access_token: new_AccessToken
+        }, 'トークンの更新が完了しました')
+    })
+    .catch(() => {
+        res.status(403).send({message: 'トークンの更新ができませんでした'})
+    })
 })
 
 module.exports = router

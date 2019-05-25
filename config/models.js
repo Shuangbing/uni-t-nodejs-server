@@ -7,6 +7,7 @@ const User = mongoose.model('User', new mongoose.Schema({
     }},
     school_id: mongoose.Schema.Types.ObjectId,
     unicoin: { type: Number, default: 0 },
+    access_token: String,
     lastlogin: Number
 }))
 
