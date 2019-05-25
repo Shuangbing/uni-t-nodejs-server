@@ -3,6 +3,8 @@ const cheerio = require('cheerio')
 const qs = require('qs')
 const curl = new (require( 'curl-request' ))();
 
+axios.defaults.timeout = 5000
+
 async function verifySchoolAccount(sc_user, sc_password) {
     return axios.post('https://webclass.tcu.ac.jp/webclass/login.php', qs.stringify({
         username: sc_user,
@@ -132,11 +134,11 @@ async function gradeQuery(sc_user, sc_password) {
         'userId': sc_user,
         'password': sc_password
     })
-    .post('https://www.uni-t.cc/aa.txt')
+    .post('https://websrv.tcu.ac.jp/tcu_web_v3/login.do')
     .then(({code, body, headers}) => {
-        if(!body == '' && !headers['set-cookie']){
-            return curl.setHeaders(['cookie: ' + 'setcookies'.toString()])
-            .get('https://www.uni-t.cc/demo/score.html')
+        if(body == '' && headers['set-cookie']){
+            return curl.setHeaders(['cookie: ' + headers['set-cookie'].toString()])
+            .get('https://websrv.tcu.ac.jp/tcu_web_v3/wssrlstr.do?clearAccessData=false&contenam=wssrlstr&kjnmnNo=6')
             .then(({code, body, headers}) => {
                 const html = body.replace(/\s\s+|&nbsp;/g,'')
                 const $ = cheerio.load(html)
