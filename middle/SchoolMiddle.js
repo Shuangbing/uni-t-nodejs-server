@@ -1,10 +1,10 @@
-const {School} = require('../config/models')
+const Schools = require('../model/School')
 const config = require('../config/config')
 
 module.exports = async(req, res, next) => {
     const raw_school = String(req.headers.authentication).split(' ').pop()
     const { uid, auth } = config.verifyToken(raw_school)
-    await School.findById(req.user.school_id)
+    await Schools.findById(req.user.school_id)
     .then((school) => {
         if(uid && req.user._id == uid) {
             const { susr, spsw } = config.decryptSchoolAccount(String(auth))

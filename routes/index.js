@@ -1,9 +1,9 @@
-var express = require('express');
-var router = express.Router();
+var express = require('express')
+var package_json = require('../package.json')
+var router = express.Router()
 
-/* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Uni-T Server' });
-});
+  res.status(200).send({message: 'Welcome to Uni-T Server!', timestamp: Date.now(), version: package_json.version})
+})
 
-module.exports = router;
+module.exports = router
