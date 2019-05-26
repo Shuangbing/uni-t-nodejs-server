@@ -1,5 +1,5 @@
-const {User, School} = require('../config/models')
-const tokenGenerator = require('jsonwebtoken')
+const Users = require('../model/User')
+const Schools = require('../model/School')
 const express = require('express')
 const router = express.Router()
 const config = require('../config/config')
@@ -10,7 +10,7 @@ router.use(express.json())
 
 
 router.get('/', UserMiddle, async(req, res) => {
-    await School.findById(req.user.school_id).findOne({
+    await Schools.findById(req.user.school_id).findOne({
         support: true
     })
     .then(function(school){
@@ -30,7 +30,7 @@ router.put('/auth/password', UserMiddle, async(req, res) => {
     if (!config.verifyPassword(req.body.password_old, req.user.password)) {
         return response.sendError(res, 'パスワードが正しくありません')
     }
-    const user = await User.findByIdAndUpdate(req.user._id, {
+    const user = await Users.findByIdAndUpdate(req.user._id, {
         password: req.body.password_new
     })
     .then(function(user) {
@@ -43,7 +43,7 @@ router.put('/auth/password', UserMiddle, async(req, res) => {
 
 router.post('/auth/register', async(req, res) => {
 
-  const school = await School.findById(req.body.school_id).findOne({
+  const school = await Schools.findById(req.body.school_id).findOne({
       support: true
   })
 
@@ -51,7 +51,7 @@ router.post('/auth/register', async(req, res) => {
     return response.sendError(res, '対応学校ではありません')
   }
 
-  const user = await User.create({
+  const user = await Users.create({
       username: req.body.username,
       password: req.body.password,
       school_id: req.body.school_id,
@@ -73,7 +73,7 @@ router.post('/auth/register', async(req, res) => {
 
 router.post('/auth/login', async(req, res) => {
     const {username, password, uuid} = req.body
-    const user = await User.findOne({
+    const user = await Users.findOne({
         username: username
     }).catch(function(e){
         return response.sendError(res, 'ログインできませんでした')

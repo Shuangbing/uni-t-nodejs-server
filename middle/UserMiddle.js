@@ -1,4 +1,4 @@
-const {User} = require('../config/models')
+const Users = require('../model/User')
 var config = require('../config/config')
 
 module.exports = async(req, res, next) => {
@@ -9,7 +9,7 @@ module.exports = async(req, res, next) => {
         return res.status(403).send({message: 'お手数ですが、再度ログインしてください'})
     }
 
-    await User.findById(uid)
+    await Users.findById(uid)
     .then(function(user){
         if(String(user._id) != uid || uuid != client_uuid || authorization != user.access_token) {
             return res.status(403).send({message: 'お手数ですが、再度ログインしてください[1]'})

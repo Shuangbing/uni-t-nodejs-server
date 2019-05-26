@@ -1,4 +1,4 @@
-const {User, School} = require('../config/models')
+const Schools = require('../model/School')
 const config = require('../config/config')
 const express = require('express')
 const router = express.Router()
@@ -70,7 +70,7 @@ router.get('/api/grade', UserMiddle, SchoolMiddle, async(req, res) => {
 })
 
 router.post('/', async(req, res) => {
-    await School.create({
+    await Schools.create({
         name: req.body.name,
         apiPath: req.body.apiPath,
         hidden: false,
@@ -91,7 +91,7 @@ router.post('/', async(req, res) => {
 })
 
 router.get('/', async(req, res) => {
-    const school = await School.find({
+    const school = await Schools.find({
         hidden: false,
         support: true
     }).exec(function(err, schools){
