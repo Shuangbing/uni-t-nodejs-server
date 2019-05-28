@@ -10,14 +10,14 @@ router.use(express.json())
 
 
 router.get('/', UserMiddle, async(req, res) => {
-    await Schools.findById(req.user.school_id).findOne({
+    await Schools.findById(req.user.school).findOne({
         support: true
     })
     .then(function(school){
         return response.sendSuccess(res,{
             username: req.user.username,
-            school_id: req.user.school_id,
-            school_name: school.name,
+            school_id: req.user.school._id,
+            school_name: req.user.school.name,
             unicoin: req.user.unicoin
         }, 'プロフィール確認できました')
     })
@@ -54,19 +54,18 @@ router.post('/auth/register', async(req, res) => {
   const user = await Users.create({
       username: req.body.username,
       password: req.body.password,
-      school_id: req.body.school_id,
+      school: req.body.school_id,
       lastlogin: config.timestamp
   })
   .then(function(user) {
     return response.sendSuccess(res, {
         uid: user._id,
         usr: user.username,
-        school_id: user.school_id,
-        school_name: school.name
+        school_id: user.school,
+        school_name: user.school.name
     }, '新規登録が完了しました')
   })
-  .catch(function (e) {
-    const {code} = e
+  .catch(()=>{
     return response.sendError(res, '新規登録できませんでした')
     })
 })
@@ -75,7 +74,7 @@ router.post('/auth/login', async(req, res) => {
     const {username, password, uuid} = req.body
     const user = await Users.findOne({
         username: username
-    }).catch(function(e){
+    }).catch(()=>{
         return response.sendError(res, 'ログインできませんでした')
     })
 
@@ -87,7 +86,7 @@ router.post('/auth/login', async(req, res) => {
         return response.sendError(res, 'パスワードが正しくありません')
     }
 
-    const school = await School.findById(user.school_id)
+    const school = await Schools.findById(user.school)
     .catch(function(){
         return response.sendError(res, '対応学校ではありません')
     })
@@ -100,8 +99,8 @@ router.post('/auth/login', async(req, res) => {
         uid: user._id,
         usr: user.username,
         access_token: user.access_token,
-        school_id: user.school_id,
-        school_name: school.name,
+        school_id: user.school._id,
+        school_name: user.school.name,
         timestamp: user.lastlogin
     }, 'ログイン完了しました')
 })

@@ -6,10 +6,6 @@ const http = axios.create({
 })
 
 http.interceptors.response.use(res => {
-    Vue.prototype.$message({
-        type: 'success',
-        message: res.data.message
-    })
     return res
 }, err => {
     Vue.prototype.$message({

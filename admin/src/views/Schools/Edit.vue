@@ -19,7 +19,7 @@
   </el-form-item>
   <el-form-item>
     <el-button type="primary" @click="onSubmit">{{id ? '編集' : '新規追加'}}</el-button>
-    <el-button>戻る</el-button>
+    <el-button @click="$router.go(-1)">戻る</el-button>
   </el-form-item>
 </el-form>
     </div>
@@ -48,7 +48,7 @@
       async onSubmit() {
           let res;
           if(this.id) {
-              res = await this.$http.put('/schools', this.form)
+              res = await this.$http.put('/schools/'+this.id, this.form)
           }else{
               res = await this.$http.post('/schools', this.form)
           }
@@ -57,15 +57,11 @@
       async fetch(){
           const res = await this.$http.get('/schools/'+this.id)
           this.form = res.data.data
+          
       }
     },
     created() {
-        
-        if(this.id) {
-            this.id && this.fetch()
-        }else{
-            this.form = this.data()
-        }
+        if(this.id) {this.id && this.fetch()}
     },
   }
 </script>
