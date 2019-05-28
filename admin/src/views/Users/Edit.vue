@@ -44,7 +44,7 @@
     },
     methods: {
       async onSubmit() {
-          let res = await this.$http.put('/users/'+this.id, this.form)
+          await this.$http.put('/users/'+this.id, this.form)
           this.$router.push('/users/list')
       },
       async fetch(){

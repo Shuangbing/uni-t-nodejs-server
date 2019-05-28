@@ -46,11 +46,11 @@
     },
     methods: {
       async onSubmit() {
-          let res;
+          
           if(this.id) {
-              res = await this.$http.put('/schools/'+this.id, this.form)
+              await this.$http.put('/schools/'+this.id, this.form)
           }else{
-              res = await this.$http.post('/schools', this.form)
+              await this.$http.post('/schools', this.form)
           }
           this.$router.push('/schools/list')
       },

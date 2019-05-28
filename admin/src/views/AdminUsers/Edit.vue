@@ -35,11 +35,10 @@
     },
     methods: {
       async onSubmit() {
-          let res;
           if(this.id){
-            res = await this.$http.put('/admins/'+this.id, this.form)
+            await this.$http.put('/admins/'+this.id, this.form)
           }else{
-            res = await this.$http.post('/admins', this.form)
+            await this.$http.post('/admins', this.form)
           }
           this.$router.push('/admins/list')
       },
