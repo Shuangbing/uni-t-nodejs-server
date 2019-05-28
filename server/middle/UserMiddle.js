@@ -10,7 +10,9 @@ module.exports = async(req, res, next) => {
     }
 
     await Users.findById(uid)
-    .then(function(user){
+    .populate('school')
+    .exec((err, user) => {
+        if(!user || err) {return res.status(405).send({message: 'アカウントがありません'})}
         if(String(user._id) != uid || uuid != client_uuid || authorization != user.access_token) {
             return res.status(403).send({message: 'お手数ですが、再度ログインしてください[1]'})
         }else{
@@ -18,10 +20,5 @@ module.exports = async(req, res, next) => {
             req.uuid = uuid
             next()
         }
-        
     })
-    .catch(function(e){
-        return res.status(405).send({message: 'アカウントがありません'})
-    })
-    
 }
