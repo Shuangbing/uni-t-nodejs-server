@@ -2,7 +2,8 @@ const mongoose = require('mongoose')
 
 const AdminUser = mongoose.model('AdminUser', new mongoose.Schema({
     username: { type: String, unique: true},
-    password: { type: String, set(val) {
+    password: { type: String, select: false,
+        set(val) {
         return require('bcrypt').hashSync(val, 10)
     }},
     fullname: String,

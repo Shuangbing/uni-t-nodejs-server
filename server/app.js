@@ -21,11 +21,12 @@ mongoose.connect(database.mongo_path, {
 
 global.privateKey = fs.readFileSync('./config/private.key', 'utf8')
 
+app.disable('etag')
 app.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*")
   res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild')
   res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS")
-  res.header("X-Powered-By",' 3.2.1')
+  res.header("X-Powered-By",' 1.0.1')
   res.header("Content-Type", "application/json;charset=utf-8");
   next();
 })
@@ -56,7 +57,7 @@ app.use(function(err, req, res, next) {
   //res.locals.message = err.message;
   //res.locals.error = req.app.get('env') === 'development' ? err : {};
   // render the error page
-  //res.status(err.status || 500);
+  res.status(err.status || 500);
   res.status(err.status).send({
     message: err.message
   })
