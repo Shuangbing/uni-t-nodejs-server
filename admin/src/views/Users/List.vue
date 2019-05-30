@@ -18,12 +18,18 @@
     <el-table-column
       prop="unicoin"
       label="ユニコイン"
-      
       >
+    </el-table-column>
+    <el-table-column label="最後ログイン" prop="lastlogin">
+    <template slot-scope="scope">
+        <div>
+          {{ scope.row.lastlogin | dateformat() }}
+        </div>
+      </template>
     </el-table-column>
     <el-table-column
       prop="unicoin"
-      label="操作">
+      label="操作" width="140">
       <template slot-scope="scope">
           <el-button type="primary" icon="el-icon-edit" @click="$router.push('/users/edit/'+scope.row._id)">編集</el-button>
       </template>

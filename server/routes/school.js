@@ -26,7 +26,7 @@ router.get('/', async(req, res) => {
     
 })
 
-router.use(UserMiddle, (req, res, next) => {
+router.use(UserMiddle, async(req, res, next) => {
     const school_api = require('./schools/'+String(req.user.school._id))
     req.api = school_api
     next()

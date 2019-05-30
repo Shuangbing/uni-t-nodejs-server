@@ -74,7 +74,7 @@ router.post('/auth/login', async(req, res) => {
     const {username, password, uuid} = req.body
     const user = await Users.findOne({
         username: username
-    }).catch(()=>{
+    }).select('+password').catch(()=>{
         return response.sendError(res, 'ログインできませんでした')
     })
 
