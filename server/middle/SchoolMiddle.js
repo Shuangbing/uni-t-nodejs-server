@@ -1,22 +1,22 @@
 const Schools = require('../model/School')
 const config = require('../config/config')
+require('express-async-errors');
+const assert = require('http-assert')
 
 module.exports = async(req, res, next) => {
     const raw_school = String(req.headers.authentication).split(' ').pop()
+    assert(raw_school, 423, '学内アカウントを設定してください')
     const { uid, auth } = config.verifyToken(raw_school)
-    await Schools.findById(req.user.school_id)
-    .then((school) => {
-        if(uid && req.user._id == uid) {
-            const { susr, spsw } = config.decryptSchoolAccount(String(auth))
-            req.school_account = {
-                susr: susr,
-                spsw: spsw
-            }
+    assert(uid && auth, 423, '学内アカウントを設定してください')
+    UserSchool = Schools.findById(req.user.school_id)
+    assert(UserSchool, 403, 'ご利用の学校はサポート中止です')
+    if(uid && req.user._id == uid) {
+        const { susr, spsw } = config.decryptSchoolAccount(String(auth))
+        req.school_account = {
+            susr: susr,
+            spsw: spsw
         }
-        req.school = school
-        next()
-    })
-    .catch(function(e){
-        return res.status(405).send({message: '認証データは無効です'})
-    })
+    }
+    req.school = UserSchool
+    next()
 }

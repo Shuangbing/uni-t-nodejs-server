@@ -32,7 +32,7 @@ router.use(UserMiddle, async(req, res, next) => {
     next()
 })
 
-router.post('/api/verify', SchoolMiddle, async(req, res) => {
+router.post('/api/verify', async(req, res) => {
     req.api.verifySchoolAccount(req.body.susr,req.body.spsw)
     .then((success)=>{
         if(success){
