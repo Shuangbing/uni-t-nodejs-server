@@ -15,7 +15,7 @@ import AdminEdit from './views/AdminUsers/Edit'
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   routes: [
     {
       path: '/',
@@ -35,8 +35,15 @@ export default new Router({
       ]
     },
     {
-      path: '/login', name: 'login', component: Login
+      path: '/login', name: 'login', component: Login, meta: {isPublic : true}
     }
     
   ]
 })
+router.beforeEach((to, from, next) => {
+  if(!to.meta.isPublic && !localStorage.token) {
+    return next('/login')
+  }
+  next()
+})
+export default router

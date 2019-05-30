@@ -1,5 +1,6 @@
 module.exports = app => {
     const express = require('express')
+    require('express-async-errors');
     const assert = require('http-assert')
     const router = express.Router()
     const Schools = require('../../model/School')
@@ -10,12 +11,14 @@ module.exports = app => {
     
     const fs = require('fs')
 
-    const authMiddleware = (req, res, next) => {
+    const authMiddleware = async (req, res, next) => {
         const token = String(req.headers.authorization || '').split(' ').pop()
         assert(token, 422, 'ログインしてください')
         const { uid } = config.verifyToken(token)
         assert(uid, 422, 'ログインしてください')
-        next()
+        req.user = await AdminUsers.findById(uid)
+        assert(req.user, 422, 'ログインしてください')
+        await next()
     }
 
     router.post('/login', async(req, res) => {
@@ -93,7 +96,8 @@ module.exports = app => {
         const model = await AdminUsers.findByIdAndUpdate(req.params.id, req.body)
         return response.sendSuccess(res, model, '管理者情報編集完了')
     })
-      
 
     app.use('/admin/api', router)
+
+    
 }
