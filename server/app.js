@@ -1,17 +1,16 @@
-var createError = require('http-errors')
-var express = require('express')
-var path = require('path')
-var cookieParser = require('cookie-parser')
-var logger = require('morgan')
+require('express-async-errors')
+const express = require('express')
+const path = require('path')
+const cookieParser = require('cookie-parser')
+const logger = require('morgan')
+const indexRouter = require('./routes/index')
+const usersRouter = require('./routes/user')
+const schoolRouter = require('./routes/school')
 
-var indexRouter = require('./routes/index')
-var usersRouter = require('./routes/user')
-var schoolRouter = require('./routes/school')
+const database = require('./config/database')
 
-var database = require('./config/database')
-
-var fs = require('fs')
-var app = express()
+const fs = require('fs')
+const app = express()
 
 const mongoose = require("mongoose")
 mongoose.connect(database.mongo_path, {
@@ -45,11 +44,6 @@ app.use('/school', schoolRouter)
 
 require('./routes/admin')(app)
 
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404))
-})
 
 app.use(async(err, req, res, next) => {
   res.status(err.status || 500).send({

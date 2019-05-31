@@ -53,6 +53,30 @@ async function syncTimeTable(sc_user, sc_password) {
             lesson_name: "応用体育",
             lesson_teacher: "山田"
         })
+        timetable.push({
+            week: 0,
+            time: 1,
+            lesson_name: "数学基礎",
+            lesson_teacher: "山田"
+        })
+        timetable.push({
+            week: 0,
+            time: 2,
+            lesson_name: "プログラミング演習",
+            lesson_teacher: "山田"
+        })
+        timetable.push({
+            week: 2,
+            time: 3,
+            lesson_name: "心理学",
+            lesson_teacher: "山田"
+        })
+        timetable.push({
+            week: 2,
+            time: 4,
+            lesson_name: "応用化学",
+            lesson_teacher: "山田"
+        })
         return timetable
     }
     return false
@@ -82,7 +106,7 @@ async function gradeQuery(sc_user, sc_password) {
             credit: 2,
             score: '不可'
         })
-        return gradeQuery
+        return gradeList
     }
     return false
 }
