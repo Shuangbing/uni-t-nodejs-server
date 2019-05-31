@@ -14,9 +14,17 @@ http.interceptors.request.use(config => {
 })
 
 http.interceptors.response.use(res => {
+    if(res.data.message) {
+        //console.log(res.data.data.message)
+        Vue.prototype.$notify({
+            title: '完了',
+            message: res.data.message,
+            type: 'success'
+        })
+    }
     return res
 }, err => {
-    if(err.response.data.message){
+    if(err.response.data.message) {
         Vue.prototype.$message({
             type: 'error',
             message: err.response.data.message
