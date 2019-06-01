@@ -85,27 +85,4 @@ router.get('/api/grade', SchoolMiddle, async(req, res) => {
     })
 })
 
-router.post('/', async(req, res) => {
-    await Schools.create({
-        name: req.body.name,
-        apiPath: req.body.apiPath,
-        hidden: false,
-        support: true,
-        supportList: {
-            useWlan: true,
-            useAttend: true,
-            useScore: true,
-            useTimetable: true
-        }
-    }).then(function(school) {
-        response.sendSuccess(res, {
-            school_name: school.name,
-            school_id: school._id,
-            timestamp: Date.now()
-        }, 'success')
-    }).catch(function (e) {
-        response.sendError(res, '学校の追加が失敗しました')
-    })
-})
-
 module.exports = router

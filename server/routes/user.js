@@ -7,9 +7,9 @@ const UserMiddle = require('../middle/UserMiddle')
 const response = require('../config/response')
 const assert = require('http-assert')
 const validator = require('validator')
+const Mail = require('../config/mail')
 
 router.use(express.json())
-
 
 router.get('/', UserMiddle, async(req, res) => {
     await Schools.findById(req.user.school).findOne({
@@ -54,6 +54,10 @@ router.post('/auth/register', async(req, res) => {
       username: req.body.username,
       password: req.body.password,
       school: req.body.school_id,
+      auth: {
+          isVaild: false,
+          lastSent: 0,
+      }
   })
   .then(function(user) {
     return response.sendSuccess(res, {
@@ -100,18 +104,43 @@ router.post('/auth/login', async(req, res) => {
 })
 
 router.post('/auth/verify/resend', async(req, res) => {
-    const {username, password, uuid} = req.body
+    const {username, password} = req.body
+    console.log(username, password)
     const user = await Users.findOne({
         username: username
     }).select('+password').catch(()=>{
         return response.sendError(res, 'ログインできませんでした')
     })
     
-    console.log(Date.now()-user.auth.lastSent)
+    
     assert(user, 403, '入力したユーザがありません')
     assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
-    assert(Date.now()-user.auth.lastSent, 407, 'メールアドレスを認証してください')
+    assert(!user.auth.isVaild, 403, 'メールアドレス認証済です')
+    assert((Date.now()-user.auth.lastSent)>=0, 407, 'しばらく経ってから再送信してください')
+    const vaildCode = String(Math.floor(100000 + Math.random() * 900000))
+    user.auth.vaildCode = vaildCode
+    user.auth.lastSent = Date.now()
+    await user.save()
+    assert(Mail.VerifyEmail(username, vaildCode), 501, 'メール送信失敗')
     return response.sendSuccess(res, [], '新しい認証コード送信しました')
+})
+
+router.post('/auth/verify', async(req, res) => {
+    const {username, password, vaild} = req.body
+    const user = await Users.findOne({
+        username: username
+    }).select('+password').catch(()=>{
+        return response.sendError(res, 'ログインできませんでした')
+    })
+    
+    
+    assert(user, 403, '入力したユーザがありません')
+    assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
+    assert(!user.auth.isVaild, 403, 'メールアドレス認証済です')
+    assert(user.auth.vaildCode === vaild, 403, '認証コードが正しくありません')
+    user.auth.isVaild = true
+    await user.save()
+    return response.sendSuccess(res, [], '認証完了です')
 })
 
 
