@@ -82,7 +82,7 @@ router.post('/auth/login', async(req, res) => {
     
     assert(user, 403, '入力したユーザがありません')
     assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
-    assert(user.auth.isVaild, 407, 'メールアドレスを認証してください')
+    assert(user.auth.isVaild, 402, 'メールアドレスを認証してください')
 
     const school = await Schools.findById(user.school)
     .catch(function(){
@@ -116,7 +116,7 @@ router.post('/auth/verify/resend', async(req, res) => {
     assert(user, 403, '入力したユーザがありません')
     assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
     assert(!user.auth.isVaild, 403, 'メールアドレス認証済です')
-    assert((Date.now()-user.auth.lastSent)>=0, 407, 'しばらく経ってから再送信してください')
+    assert((Date.now()-user.auth.lastSent)>=0, 403, 'しばらく経ってから再送信してください')
     const vaildCode = String(Math.floor(100000 + Math.random() * 900000))
     user.auth.vaildCode = vaildCode
     user.auth.lastSent = Date.now()
