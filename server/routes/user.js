@@ -5,9 +5,11 @@ const router = express.Router()
 const config = require('../config/config')
 const UserMiddle = require('../middle/UserMiddle')
 const response = require('../config/response')
+const assert = require('http-assert')
+const validator = require('validator')
+const Mail = require('../config/mail')
 
 router.use(express.json())
-
 
 router.get('/', UserMiddle, async(req, res) => {
     await Schools.findById(req.user.school).findOne({
@@ -42,20 +44,20 @@ router.put('/auth/password', UserMiddle, async(req, res) => {
 })
 
 router.post('/auth/register', async(req, res) => {
-
   const school = await Schools.findById(req.body.school_id).findOne({
       support: true
   })
-
-  if(!school) {
-    return response.sendError(res, '対応学校ではありません')
-  }
-
+  assert(school, 403, '対応学校ではありません')
+  assert(validator.isEmail(req.body.username), 403, '正しいメールアドレスを入力してください')
+  assert(validator.isLength(req.body.password, {min: 6, max: 20}), 403, 'パスワードを6-20桁の間に設定してください')
   const user = await Users.create({
       username: req.body.username,
       password: req.body.password,
       school: req.body.school_id,
-      lastlogin: config.timestamp
+      auth: {
+          isVaild: false,
+          lastSent: 0,
+      }
   })
   .then(function(user) {
     return response.sendSuccess(res, {
@@ -77,14 +79,10 @@ router.post('/auth/login', async(req, res) => {
     }).select('+password').catch(()=>{
         return response.sendError(res, 'ログインできませんでした')
     })
-
-    if(!user) {
-        return response.sendError(res, '入力したユーザがありません')
-    }
-
-    if (!config.verifyPassword(password, user.password)) {
-        return response.sendError(res, 'パスワードが正しくありません')
-    }
+    
+    assert(user, 403, '入力したユーザがありません')
+    assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
+    assert(user.auth.isVaild, 402, 'メールアドレスを認証してください')
 
     const school = await Schools.findById(user.school)
     .catch(function(){
@@ -103,6 +101,46 @@ router.post('/auth/login', async(req, res) => {
         school_name: user.school.name,
         timestamp: user.lastlogin
     }, 'ログイン完了しました')
+})
+
+router.post('/auth/verify/resend', async(req, res) => {
+    const {username, password} = req.body
+    console.log(username, password)
+    const user = await Users.findOne({
+        username: username
+    }).select('+password').catch(()=>{
+        return response.sendError(res, 'ログインできませんでした')
+    })
+    
+    
+    assert(user, 403, '入力したユーザがありません')
+    assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
+    assert(!user.auth.isVaild, 403, 'メールアドレス認証済です')
+    assert((Date.now()-user.auth.lastSent)>=0, 403, 'しばらく経ってから再送信してください')
+    const vaildCode = String(Math.floor(100000 + Math.random() * 900000))
+    user.auth.vaildCode = vaildCode
+    user.auth.lastSent = Date.now()
+    await user.save()
+    assert(Mail.VerifyEmail(username, vaildCode), 501, 'メール送信失敗')
+    return response.sendSuccess(res, [], '新しい認証コード送信しました')
+})
+
+router.post('/auth/verify', async(req, res) => {
+    const {username, password, vaild} = req.body
+    const user = await Users.findOne({
+        username: username
+    }).select('+password').catch(()=>{
+        return response.sendError(res, 'ログインできませんでした')
+    })
+    
+    
+    assert(user, 403, '入力したユーザがありません')
+    assert(config.verifyPassword(password, user.password), 403, 'パスワードが正しくありません')
+    assert(!user.auth.isVaild, 403, 'メールアドレス認証済です')
+    assert(user.auth.vaildCode === vaild, 403, '認証コードが正しくありません')
+    user.auth.isVaild = true
+    await user.save()
+    return response.sendSuccess(res, [], '認証完了です')
 })
 
 

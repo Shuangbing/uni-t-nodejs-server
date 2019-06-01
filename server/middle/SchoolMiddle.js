@@ -1,6 +1,5 @@
 const Schools = require('../model/School')
 const config = require('../config/config')
-require('express-async-errors');
 const assert = require('http-assert')
 
 module.exports = async(req, res, next) => {

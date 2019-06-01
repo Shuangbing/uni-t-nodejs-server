@@ -6,6 +6,11 @@ const User = mongoose.model('User', new mongoose.Schema({
         set(val) {
         return require('bcrypt').hashSync(val, 10)
     }},
+    auth: {
+        isVaild: {type: Boolean, default: false},
+        vaildCode: String,
+        lastSent: {type: Date, default: Date.now}
+    },
     school: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'School'},

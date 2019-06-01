@@ -16,8 +16,9 @@ module.exports = app => {
         assert(token, 422, 'ログインしてください')
         const { uid } = config.verifyToken(token)
         assert(uid, 422, 'ログインしてください')
-        req.user = await AdminUsers.findById(uid)
-        assert(req.user, 422, 'ログインしてください')
+        req.adminUser = await AdminUsers.findById(uid)
+        assert(req.adminUser, 422, '再ログインしてください')
+        assert(req.adminUser.access_token === token, 422, 'トークンの有効期限が切れました')
         await next()
     }
 
@@ -31,7 +32,7 @@ module.exports = app => {
         const access_token = config.generateToken(user._id, 'AdminUser')
         user.access_token = access_token
         user.save()
-        res.send({access_token})
+        return response.sendSuccess(res, {access_token: access_token}, 'ログイン完了')
     })
 
     router.post('/schools', authMiddleware, async(req, res) => {
@@ -95,6 +96,12 @@ module.exports = app => {
     router.put('/admins/:id', authMiddleware, async(req, res) => {
         const model = await AdminUsers.findByIdAndUpdate(req.params.id, req.body)
         return response.sendSuccess(res, model, '管理者情報編集完了')
+    })
+
+    router.get('/logout', authMiddleware, async(req, res) => {
+        req.adminUser.access_token = 'null'
+        req.adminUser.save()
+        return response.sendSuccess(res, [], 'ログアウト完了')
     })
 
     app.use('/admin/api', router)

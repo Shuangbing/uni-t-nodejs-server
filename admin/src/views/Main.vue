@@ -30,7 +30,9 @@
         <el-menu-item-group title="通知">
           <el-menu-item index="3-3">メール送信管理</el-menu-item>
         </el-menu-item-group>
-        
+        <el-menu-item-group title="管理者">
+          <el-menu-item @click="logout">ログアウト</el-menu-item>
+        </el-menu-item-group>
       </el-submenu>
     </el-menu>
   </el-aside>
@@ -54,3 +56,15 @@
     color: #333;
   }
 </style>
+
+<script>
+export default {
+  methods: {
+    async logout() {
+      await this.$http.get('/logout')
+      localStorage.clear()
+      this.$router.push('/login')
+    }
+  }
+}
+</script>

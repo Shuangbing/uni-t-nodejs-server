@@ -8,8 +8,8 @@ mongoose.connect(database.mongo_path, {
 })
 
 const model = AdminUsers.create({
-    username: "test@uni-t.cc",
-    password: "123456"
+    username: "kasouhei@qq.com",
+    password: "1z2x3c"
 })
 
 console.log(model)
