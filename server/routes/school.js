@@ -5,6 +5,8 @@ const router = express.Router()
 const UserMiddle = require('../middle/UserMiddle')
 const SchoolMiddle = require('../middle/SchoolMiddle')
 const response = require('../config/response')
+const assert = require('http-assert')
+
 router.use(express.json())
 
 router.get('/', async(req, res) => {
@@ -48,7 +50,7 @@ router.post('/api/verify', async(req, res) => {
 router.get('/api/timetable', SchoolMiddle, async(req, res) => {
     await req.api.syncTimeTable(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
-        if(!data){ return response.sendError(res, '時間割同期できませんでした') }
+        assert(data && data.length>0, 403, '時間割同期できませんでした')
         response.sendSuccess( res, data, '時間割同期完了しました')
     })
 })
@@ -56,7 +58,7 @@ router.get('/api/timetable', SchoolMiddle, async(req, res) => {
 router.get('/api/attendance', SchoolMiddle, async(req, res) => {
     await req.api.attendanceList(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
-        if(!data){ return response.sendError(res, '出席情報ありません') }
+        assert(data && data.length>0, 403, '出席情報ありません')
         response.sendSuccess( res, data, '出席情報の更新が完了しました')
     })
 })
@@ -64,7 +66,7 @@ router.get('/api/attendance', SchoolMiddle, async(req, res) => {
 router.post('/api/attendance', SchoolMiddle, async(req, res) => {
     await req.api.attendancePost(req.school_account.susr, req.school_account.spsw, req.body.attendanceCode, req.body.attendanceNo)
     .then((data)=>{
-        if(!data){ return response.sendError(res, '出席送信できませんでした') }
+        assert(data, 403, '出席送信できませんでした')
         switch(data){
             case 1:
                 response.sendSuccess( res, data, '出席送信が完了しました' )
@@ -79,8 +81,7 @@ router.post('/api/attendance', SchoolMiddle, async(req, res) => {
 router.get('/api/grade', SchoolMiddle, async(req, res) => {
     await req.api.gradeQuery(req.school_account.susr, req.school_account.spsw)
     .then((data)=>{
-        console.log(data)
-        if(!data){ return response.sendError(res, '成績情報確認できませんでした') }
+        assert(data && data.length>0, 403, '成績情報がありません')
         response.sendSuccess( res, data, '成績情報確認できました' )
     })
 })
