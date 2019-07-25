@@ -1,6 +1,8 @@
 # HttpTest File
 *.http
 
+/server/public
+
 # Logs
 logs
 *.log

@@ -3,7 +3,7 @@ import Vue from 'vue'
 import router from './router'
 
 const http = axios.create({
-    baseURL: 'http://localhost:3000/admin/api'
+    baseURL: process.env.VUE_APP_API_URL || '/admin/api'
 })
 
 http.interceptors.request.use(config => {
@@ -32,7 +32,6 @@ http.interceptors.response.use(res => {
     }
 
     if(err.response.status === 422) {
-        console.log('login!')
         router.push('/login')
     }
     return Promise.reject(err)

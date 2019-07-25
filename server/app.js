@@ -41,6 +41,7 @@ app.use(cookieParser())
 app.use('/', indexRouter)
 app.use('/user', usersRouter)
 app.use('/school', schoolRouter)
+app.use('/dashboard', express.static(__dirname + '/public'))
 
 require('./routes/admin')(app)
 
