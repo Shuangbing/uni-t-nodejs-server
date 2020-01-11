@@ -15,7 +15,8 @@ const app = express()
 const mongoose = require("mongoose")
 mongoose.connect(database.mongo_path, {
     useNewUrlParser: true,
-    useCreateIndex: true
+    useCreateIndex: true,
+    useUnifiedTopology: true
 })
 
 global.privateKey = fs.readFileSync('./config/private.key', 'utf8')

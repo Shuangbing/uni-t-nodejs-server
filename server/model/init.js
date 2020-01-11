@@ -4,7 +4,8 @@ var database = require('./../config/database')
 
 mongoose.connect(database.mongo_path, {
     useNewUrlParser: true,
-    useCreateIndex: true
+    useCreateIndex: true,
+    useUnifiedTopology: true
 })
 
 const model = AdminUsers.create({
