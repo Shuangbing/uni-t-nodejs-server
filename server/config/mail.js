@@ -1,20 +1,40 @@
-const mailgun = require("mailgun-js")
-const DOMAIN = "domain.com"
-const FROM = "Uni-T Service <service@"+DOMAIN+">"
-const mail = mailgun({apiKey: "apikey", domain: DOMAIN})
-const subject = "ユニツからの自動配信"
+const mailjet = require('node-mailjet')
+    .connect(process.env.MAIL_ID, process.env.MAIL_KEY)
 
 async function VerifyEmail(username, code) {
-    const data = {
-        from: FROM,
-        to: username,
-        subject: subject,
-        html: "ユニツのご利用ありがとうございます。<br>認証コードは「"+code+"」です (有効期間1時間)"
-    }
-    return await mail.messages().send(data, function (error, body) {
-        if(error) { return false }
-        return true
-    })
+    const request = mailjet
+        .post("send", { 'version': 'v3.1' })
+        .request({
+            "Messages": [
+                {
+                    "From": {
+                        "Email": "account@noreply.uni-t.cc",
+                        "Name": "Uni-T Account"
+                    },
+                    "To": [
+                        {
+                            "Email": username,
+                            "Name": "Uni-T User"
+                        }
+                    ],
+                    "Subject": "[Uni-T]新規登録認証コード",
+                    "TextPart": "認証用コードの通知",
+                    "HTMLPart": "ユニツのご利用ありがとうございます。<br>認証コードは「" + code + "」です (有効期間1時間)",
+                    "CustomID": "AppGettingStartedTest"
+                }
+            ]
+        })
+    return await request
+        .then(() => {
+            return true
+        })
+        .catch(() => {
+            return false
+        })
 }
 
 module.exports.VerifyEmail = VerifyEmail
+
+
+
+

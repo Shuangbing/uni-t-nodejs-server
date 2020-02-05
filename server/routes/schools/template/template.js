@@ -111,8 +111,20 @@ async function gradeQuery(sc_user, sc_password) {
     return false
 }
 
+async function canceledInfo(sc_user, sc_password) {
+    return [{
+        date: '3/5',
+        weekday: 3,
+        coma: 3,
+        subjectCode: 'tbb514101',
+        subject: '海外研修',
+        teacher: '小林由利子'
+    }]
+}
+
 module.exports.attendanceList = attendanceList
 module.exports.attendancePost = attendancePost
 module.exports.verifySchoolAccount = verifySchoolAccount
 module.exports.syncTimeTable = syncTimeTable
 module.exports.gradeQuery = gradeQuery
+module.exports.canceledInfo = canceledInfo

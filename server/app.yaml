@@ -1,0 +1,6 @@
+runtime: nodejs
+env: flex
+env_variables:
+    DB_PATH: "mongodb://"
+    MAIL_ID: "xxxxxxxxx"
+    MAIL_KEY: "xxxxxxxxx"
