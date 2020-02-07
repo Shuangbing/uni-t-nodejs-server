@@ -92,7 +92,7 @@ async function syncTimeTable(sc_user, sc_password) {
         language: 'JAPANESE'
     }))
         .then((res) => {
-            return axios.get('https://webclass.tcu.ac.jp/webclass/index.php?year=2019&semester=3', {
+            return axios.get('https://webclass.tcu.ac.jp/webclass/index.php?year=2019&semester=5', {
                 headers: {
                     Cookie: res.headers['set-cookie']
                 }
