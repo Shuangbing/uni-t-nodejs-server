@@ -1,4 +1,4 @@
-const vaildPassword = require('bcrypt')
+const vaildPassword = require('bcryptjs')
 const crypto = require('crypto')
 const tokenGenerator = require('jsonwebtoken')
 const timestamp = Date.now()
