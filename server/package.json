@@ -9,6 +9,7 @@
   "dependencies": {
     "aws-serverless-express": "^3.3.6",
     "axios": "^0.18.0",
+    "axios-cookiejar-support": "^0.5.1",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.0.0-rc.3",
     "cookie-parser": "~1.4.4",

@@ -4,10 +4,8 @@ const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/user')
 const schoolRouter = require('./routes/school')
 const cookieParser = require('cookie-parser')
-const logger = require('morgan')
 const database = require('./config/database')
 
-const fs = require('fs')
 const app = express()
 
 const mongoose = require("mongoose")
@@ -17,7 +15,7 @@ mongoose.connect(database.mongo_path, {
   useUnifiedTopology: true
 })
 
-global.privateKey = fs.readFileSync('./config/private.key', 'utf8')
+global.privateKey = process.env.JWT_KEY || 'jwt_private_key'
 
 app.disable('etag')
 app.use(express.json())

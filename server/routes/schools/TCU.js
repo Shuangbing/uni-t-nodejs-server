@@ -2,7 +2,7 @@ const axios = require('axios')
 const cheerio = require('cheerio')
 const qs = require('qs')
 
-axios.defaults.timeout = 5000
+axios.defaults.timeout = 5000;
 
 async function verifySchoolAccount(sc_user, sc_password) {
     return axios.post('https://webclass.tcu.ac.jp/webclass/login.php', qs.stringify({
@@ -125,49 +125,43 @@ async function syncTimeTable(sc_user, sc_password) {
 }
 
 async function gradeQuery(sc_user, sc_password) {
-    return false
-    // const jconv = require('jconv');
-    // return axios.post('https://websrv.tcu.ac.jp/tcu_web_v3/login.do', qs.stringify({
-    //     'buttonName': 'login',
-    //     'lang': '1',
-    //     'userId': sc_user,
-    //     'password': sc_password
-    // }))
-    // .then(({code, body, headers}) => {
-    //     if(body == '' && headers['set-cookie']){
-    //         return curl.setHeaders(['cookie: ' + headers['set-cookie'].toString()])
-    //         .get('https://websrv.tcu.ac.jp/tcu_web_v3/wssrlstr.do?clearAccessData=false&contenam=wssrlstr&kjnmnNo=6')
-    //         .then(({code, body, headers}) => {
-    //             const html = body.replace(/\s\s+|&nbsp;/g,'')
-    //             const $ = cheerio.load(html)
-    //             var gradeList = [];
-    //             $('table tr[class=column_odd]').each(function(j, item) {
-    //                 var gradeData = {class: '', credit: 0, score: ''}
-    //                 $(item).children('td').each(function(i, item) {
-    //                     switch(i){
-    //                         case 0:
-    //                             gradeData.class = $(item).text()
-    //                             break
-    //                         case 1:
-    //                             gradeData.credit = Number($(item).text())
-    //                             break
-    //                         case 2:
-    //                             gradeData.score = $(item).text()
-    //                             break
-    //                     }
-    //                 })
-    //                 gradeList.push(gradeData)
-    //             })
-    //             return gradeList
-    //         })
-    //     }
-    //     else{
-    //         return false
-    //     }
-    // })
-    // .catch(() => {
-    //     return false
-    // })
+    const AxiosCookiejarSupport = require('axios-cookiejar-support').default;
+    AxiosCookiejarSupport(axios);
+    let client = axios.create({
+        jar: true,
+        withCredentials: true,
+    });
+
+    var res = await client.get('https://websrv.tcu.ac.jp/tcu_web_v3/login.do')
+    res = await client.post('https://websrv.tcu.ac.jp/tcu_web_v3/login.do', qs.stringify({
+        'buttonName': 'login',
+        'lang': '1',
+        'userId': sc_user,
+        'password': sc_password
+    }))
+    res = await client.get('https://websrv.tcu.ac.jp/tcu_web_v3/wssrlstr.do?clearAccessData=true&contenam=wssrlstr&kjnmnNo=6\r\n')
+    const html = res.data.replace(/\s\s+|&nbsp;/g, '')
+    const $ = cheerio.load(html)
+    var gradeList = [];
+    $('table tr[class=column_odd]').each(function (j, item) {
+        var gradeData = { class: '', credit: 0, score: '' }
+        $(item).children('td').each(function (i, item) {
+            switch (i) {
+                case 0:
+                    gradeData.class = $(item).text()
+                    break
+                case 1:
+                    gradeData.credit = Number($(item).text())
+                    break
+                case 2:
+                    gradeData.score = $(item).text()
+                    break
+            }
+        })
+        gradeList.push(gradeData)
+    })
+    if (gradeList.length == 0) return false
+    return gradeList
 }
 
 async function canceledInfo(sc_user, sc_password, campus = 'all') {
