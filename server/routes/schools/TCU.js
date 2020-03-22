@@ -164,7 +164,7 @@ async function gradeQuery(sc_user, sc_password) {
 
     const { gpa, totalCredit } = getGpaScore(gradeList)
     gradeList.unshift({
-        class: `[GPA算出欄] GPA:${gpa}`,
+        class: `GPA: ${gpa}`,
         credit: `${totalCredit}(取得済み)`,
         score: "-"
     })
