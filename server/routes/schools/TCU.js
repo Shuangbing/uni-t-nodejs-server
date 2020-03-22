@@ -161,9 +161,53 @@ async function gradeQuery(sc_user, sc_password) {
         gradeList.push(gradeData)
     })
     if (gradeList.length == 0) return false
+
+    const { gpa, totalCredit } = getGpaScore(gradeList)
+    gradeList.unshift({
+        class: `[GPA算出欄] GPA:${gpa}`,
+        credit: `${totalCredit}(取得済み)`,
+        score: "-"
+    })
     return gradeList
 }
 
+function getGpaScore(gradeData) {
+    var totalCredit = 0
+    var gpaSumVal = 0
+    var totalCreditWithoutF = 0
+    for (item of gradeData) {
+
+        switch (item.score) {
+            case "秀":
+                totalCredit += item.credit
+                gpaSumVal += item.credit * 4
+                totalCreditWithoutF += item.credit
+                break
+            case "優":
+                totalCredit += item.credit
+                gpaSumVal += item.credit * 3
+                totalCreditWithoutF += item.credit
+                break
+            case "良":
+                totalCredit += item.credit
+                gpaSumVal += item.credit * 2
+                totalCreditWithoutF += item.credit
+                break
+            case "可":
+                totalCredit += item.credit
+                gpaSumVal += item.credit * 1
+                totalCreditWithoutF += item.credit
+                break
+            case "不可":
+                totalCredit += item.credit
+                break
+        }
+    }
+    return {
+        gpa: (gpaSumVal / totalCredit).toFixed(3),
+        totalCredit: totalCreditWithoutF
+    }
+}
 async function canceledInfo(sc_user, sc_password, campus = 'all') {
     var canceledList = []
     for (var i = 0; i < 2; i++) {
