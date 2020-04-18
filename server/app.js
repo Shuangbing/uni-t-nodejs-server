@@ -10,6 +10,8 @@ const app = express()
 
 const mongoose = require("mongoose")
 mongoose.connect(database.mongo_path, {
+  socketTimeoutMS: 45000,
+  keepAlive: true,
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true
