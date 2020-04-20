@@ -4,20 +4,20 @@ const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/user')
 const schoolRouter = require('./routes/school')
 const cookieParser = require('cookie-parser')
-const database = require('./config/database')
 
 const app = express()
-
-const mongoose = require("mongoose")
-mongoose.connect(database.mongo_path, {
-  socketTimeoutMS: 45000,
-  keepAlive: true,
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true
-})
-
 global.privateKey = process.env.JWT_KEY || 'jwt_private_key'
+
+if (process.env.runtime_env == "dev") {
+  const mongoose = require("mongoose")
+  mongoose.connect(process.env.DB_PATH || 'mongodb://localhost:27017/unit-t-db', {
+    socketTimeoutMS: 45000,
+    keepAlive: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true
+  })
+}
 
 app.disable('etag')
 app.use(express.json())

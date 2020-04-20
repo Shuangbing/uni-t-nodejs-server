@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node app.js",
-    "test": "echo good!"
+    "start": "export runtime_env=prod && node app.js",
+    "dev": "export runtime_env=dev && node app.js"
   },
   "dependencies": {
     "aws-serverless-express": "^3.3.8",
